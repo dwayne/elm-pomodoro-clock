@@ -10,58 +10,12 @@
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
   </head>
   <body>
-    <div>
-      <h1>Pomodoro Clock</h1>
-
-      <div class="flex">
-        <div class="setting">
-          <h2>Break Length</h2>
-          <div>
-            <button class="button">
-              <i class="fa fa-arrow-down fa-2x"></i>
-            </button>
-            <span>5</span>
-            <button class="button">
-              <i class="fa fa-arrow-up fa-2x"></i>
-            </button>
-          </div>
-        </div>
-
-        <div class="setting">
-          <h2>Session Length</h2>
-          <div>
-            <button class="button">
-              <i class="fa fa-arrow-down fa-2x"></i>
-            </button>
-            <span>25</span>
-            <button class="button">
-              <i class="fa fa-arrow-up fa-2x"></i>
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <div class="mt timer">
-        <h3 class="timer__title">Session</h3>
-        <div class="timer__value">25:00</div>
-      </div>
-
-      <div class="mt">
-        <button class="button">
-          <i class="fa fa-play fa-2x"></i>
-          <i class="fa fa-pause fa-2x"></i>
-        </button>
-        <button class="button">
-          <i class="fa fa-refresh fa-2x"></i>
-        </button>
-      </div>
-
-      <footer class="mt attribution">
-        Developed by
-        <a href="https://github.com/dwayne/" target="_blank" class="developer">
-          Dwayne Crooks
-        </a>
-      </footer>
-    </div>
+    <div id="app"></div>
+    <script src="app.js"></script>
+    <script>
+      Elm.Main.init({
+        node: document.getElementById("app")
+      });
+    </script>
   </body>
 </html>
