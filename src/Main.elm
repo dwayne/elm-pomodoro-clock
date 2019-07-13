@@ -40,6 +40,7 @@ init =
 type Msg
   = ClickedDown Setting
   | ClickedUp Setting
+  | ClickedReset
 
 
 type Setting
@@ -61,6 +62,9 @@ update msg model =
 
     ClickedUp Session ->
       { model | session = increment model.session }
+
+    ClickedReset ->
+      init
 
 
 increment : Int -> Int
@@ -124,14 +128,17 @@ viewTimer value =
     ]
 
 
-viewControls : Html msg
+viewControls : Html Msg
 viewControls =
   div [ class "mt" ]
     [ button [ class "button" ]
         [ i [ class "fa fa-play fa-2x" ] []
         , i [ class "fa fa-pause fa-2x" ] []
         ]
-    , button [ class "button" ]
+    , button
+        [ class "button"
+        , onClick ClickedReset
+        ]
         [ i [ class "fa fa-refresh fa-2x" ] [] ]
     ]
 
