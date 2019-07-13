@@ -18,11 +18,19 @@ main =
 -- MODEL
 
 
-type alias Model = ()
+type alias Model =
+  { break : Int
+  , session : Int
+  , timeLeft : Int
+  }
 
 
 init : Model
-init = ()
+init =
+  { break = 5
+  , session = 25
+  , timeLeft = 25 * 60
+  }
 
 
 -- UPDATE
@@ -39,50 +47,80 @@ update _ = identity
 
 
 view : Model -> Html msg
-view _ =
+view { break, session, timeLeft } =
   div []
     [ h1 [] [ text "Pomodoro Clock" ]
     , div [ class "flex" ]
-        [ div [ class "setting" ]
-            [ h2 [] [ text "Break Length" ]
-            , div []
-                [ button [ class "button" ]
-                    [ i [ class "fa fa-arrow-down fa-2x" ] [] ]
-                , span [] [ text "5" ]
-                , button [ class "button" ]
-                    [ i [ class "fa fa-arrow-up fa-2x" ] [] ]
-                ]
-            ]
-        , div [ class "setting" ]
-            [ h2 [] [ text "Session Length" ]
-            , div []
-                [ button [ class "button" ]
-                    [ i [ class "fa fa-arrow-down fa-2x" ] [] ]
-                , span [] [ text "25" ]
-                , button [ class "button" ]
-                    [ i [ class "fa fa-arrow-up fa-2x" ] [] ]
-                ]
-            ]
+        [ viewSetting "Break Length" break
+        , viewSetting "Session Length" session
         ]
-    , div [ class "mt timer" ]
-        [ h3 [ class "timer__title" ] [ text "Session" ]
-        , div [ class "timer__value" ] [ text "25:00" ]
-        ]
-    , div [ class "mt" ]
+    , viewTimer timeLeft
+    , viewControls
+    , viewAttribution
+    ]
+
+
+viewSetting : String -> Int -> Html msg
+viewSetting title value =
+  div [ class "setting" ]
+    [ h2 [] [ text title ]
+    , div []
         [ button [ class "button" ]
-            [ i [ class "fa fa-play fa-2x" ] []
-            , i [ class "fa fa-pause fa-2x" ] []
-            ]
+            [ i [ class "fa fa-arrow-down fa-2x" ] [] ]
+        , span [] [ text (String.fromInt value) ]
         , button [ class "button" ]
-            [ i [ class "fa fa-refresh fa-2x" ] [] ]
-        ]
-    , footer [ class "mt attribution" ]
-        [ text "Developed by"
-        , a
-          [ class "developer"
-          , href "https://github.com/dwayne/"
-          , target "_blank"
-          ]
-          [ text "Dwayne Crooks" ]
+            [ i [ class "fa fa-arrow-up fa-2x" ] [] ]
         ]
     ]
+
+
+viewTimer : Int -> Html msg
+viewTimer value =
+  div [ class "mt timer" ]
+    [ h3 [ class "timer__title" ] [ text "Session" ]
+    , div [ class "timer__value" ] [ text (fromSeconds value) ]
+    ]
+
+
+viewControls : Html msg
+viewControls =
+  div [ class "mt" ]
+    [ button [ class "button" ]
+        [ i [ class "fa fa-play fa-2x" ] []
+        , i [ class "fa fa-pause fa-2x" ] []
+        ]
+    , button [ class "button" ]
+        [ i [ class "fa fa-refresh fa-2x" ] [] ]
+    ]
+
+
+viewAttribution : Html msg
+viewAttribution =
+  footer [ class "mt attribution" ]
+    [ text "Developed by"
+    , a
+      [ class "developer"
+      , href "https://github.com/dwayne/"
+      , target "_blank"
+      ]
+      [ text "Dwayne Crooks" ]
+    ]
+
+
+-- HELPERS
+
+
+fromSeconds : Int -> String
+fromSeconds total =
+  let
+    mins =
+      total // 60
+
+    secs =
+      modBy 60 total
+  in
+    String.concat
+      [ String.padLeft 2 '0' (String.fromInt mins)
+      , ":"
+      , String.padLeft 2 '0' (String.fromInt secs)
+      ]
