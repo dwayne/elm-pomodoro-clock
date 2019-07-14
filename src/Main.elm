@@ -1,9 +1,9 @@
-module Main exposing (main)
+port module Main exposing (main)
 
 
 import Browser
-import Html exposing (Html, a, button, div, footer, h1, h2, h3, i, span, text)
-import Html.Attributes exposing (class, classList, disabled, href, target)
+import Html exposing (Html, a, audio, button, div, footer, h1, h2, h3, i, span, text)
+import Html.Attributes exposing (class, classList, disabled, href, id, src, target)
 import Html.Events exposing (onClick)
 import Time
 
@@ -84,17 +84,23 @@ update msg model =
           )
 
         Tick _ ->
-          ( if model.timeLeft > 0 then
-              { model | timeLeft = model.timeLeft - 1 }
-            else
-              case phase of
-                Session ->
-                  { model | timeLeft = model.break * 60, state = Running Break }
+          if model.timeLeft > 0 then
+            ( { model | timeLeft = model.timeLeft - 1 }
+            , Cmd.none
+            )
+          else
+            let
+              newModel =
+                case phase of
+                  Session ->
+                    { model | timeLeft = model.break * 60, state = Running Break }
 
-                Break ->
-                  { model | timeLeft = model.session * 60, state = Running Session }
-          , Cmd.none
-          )
+                  Break ->
+                    { model | timeLeft = model.session * 60, state = Running Session }
+            in
+              ( newModel
+              , play "beep"
+              )
 
         _ ->
           ( model
@@ -191,6 +197,12 @@ decrement n =
     n
 
 
+-- COMMANDS
+
+
+port play : String -> Cmd msg
+
+
 -- SUBSCRIPTIONS
 
 
@@ -260,6 +272,7 @@ viewTimer value state =
       [ class "mt timer", classList [ ("is-expiring", value < 60) ] ]
       [ h3 [ class "timer__title" ] [ text title ]
       , div [ class "timer__value" ] [ text (fromSeconds value) ]
+      , audio [ id "beep", src "assets/audio/beep.wav" ] []
       ]
 
 

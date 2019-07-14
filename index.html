@@ -13,8 +13,12 @@
     <div id="app"></div>
     <script src="app.js"></script>
     <script>
-      Elm.Main.init({
+      const app = Elm.Main.init({
         node: document.getElementById("app")
+      });
+
+      app.ports.play.subscribe(function (id) {
+        document.getElementById(id).play();
       });
     </script>
   </body>
