@@ -25,8 +25,18 @@ type alias Model =
   { break : Int
   , session : Int
   , timeLeft : Int
-  , isRunning : Bool
+  , state : State
   }
+
+
+type State
+  = Paused Phase
+  | Running Phase
+
+
+type Phase
+  = Session
+  | Break
 
 
 init : () -> (Model, Cmd msg)
@@ -41,7 +51,7 @@ defaultModel =
   { break = 5
   , session = 25
   , timeLeft = 25 * 60
-  , isRunning = False
+  , state = Paused Session
   }
 
 
@@ -49,66 +59,120 @@ defaultModel =
 
 
 type Msg
-  = ClickedDown Setting
-  | ClickedUp Setting
+  = ClickedDownBreak
+  | ClickedUpBreak
+  | ClickedDownSession
+  | ClickedUpSession
   | ClickedReset
   | ClickedPlayPause
   | Tick Time.Posix
 
 
-type Setting
-  = Break
-  | Session
-
-
 update : Msg -> Model -> (Model, Cmd msg)
 update msg model =
-  case msg of
-    ClickedDown Break ->
-      ( { model | break = decrement model.break }
-      , Cmd.none
-      )
+  case model.state of
+    Running phase ->
+      case msg of
+        ClickedReset ->
+          ( defaultModel
+          , Cmd.none
+          )
 
-    ClickedUp Break ->
-      ( { model | break = increment model.break }
-      , Cmd.none
-      )
+        ClickedPlayPause ->
+          ( { model | state = Paused phase }
+          , Cmd.none
+          )
 
-    ClickedDown Session ->
-      let
-        newSession =
-          decrement model.session
-      in
-        ( { model | session = newSession, timeLeft = newSession * 60 }
-        , Cmd.none
-        )
+        Tick _ ->
+          ( if model.timeLeft > 0 then
+              { model | timeLeft = model.timeLeft - 1 }
+            else
+              case phase of
+                Session ->
+                  { model | timeLeft = model.break * 60, state = Running Break }
 
-    ClickedUp Session ->
-      let
-        newSession =
-          increment model.session
-      in
-        ( { model | session = newSession, timeLeft = newSession * 60 }
-        , Cmd.none
-        )
+                Break ->
+                  { model | timeLeft = model.session * 60, state = Running Session }
+          , Cmd.none
+          )
 
-    ClickedReset ->
-      ( defaultModel
-      , Cmd.none
-      )
+        _ ->
+          ( model
+          , Cmd.none
+          )
 
-    ClickedPlayPause ->
-      ( { model | isRunning = not model.isRunning }
-      , Cmd.none
-      )
+    Paused phase ->
+      case msg of
+        ClickedDownBreak ->
+          let
+            newBreak =
+              decrement model.break
+          in
+            ( case phase of
+                Session ->
+                  { model | break = newBreak }
 
-    Tick _ ->
-      ( if model.timeLeft > 0 then
-          { model | timeLeft = model.timeLeft - 1 }
-        else
-          { model | timeLeft = model.session * 60, isRunning = False }
-      , Cmd.none
-      )
+                Break ->
+                  { model | break = newBreak, timeLeft = newBreak * 60 }
+            , Cmd.none
+            )
+
+        ClickedUpBreak ->
+          let
+            newBreak =
+              increment model.break
+          in
+            ( case phase of
+                Session ->
+                  { model | break = newBreak }
+
+                Break ->
+                  { model | break = newBreak, timeLeft = newBreak * 60 }
+            , Cmd.none
+            )
+
+        ClickedDownSession ->
+          let
+            newSession =
+              decrement model.session
+          in
+            ( case phase of
+                Session ->
+                  { model | session = newSession, timeLeft = newSession * 60 }
+
+                Break ->
+                  { model | session = newSession }
+            , Cmd.none
+            )
+
+        ClickedUpSession ->
+          let
+            newSession =
+              increment model.session
+          in
+            ( case phase of
+                Session ->
+                  { model | session = newSession, timeLeft = newSession * 60 }
+
+                Break ->
+                  { model | session = newSession }
+            , Cmd.none
+            )
+
+        ClickedReset ->
+          ( defaultModel
+          , Cmd.none
+          )
+
+        ClickedPlayPause ->
+          ( { model | state = Running phase }
+          , Cmd.none
+          )
+
+        _ ->
+          ( model
+          , Cmd.none
+          )
 
 
 increment : Int -> Int
@@ -131,8 +195,8 @@ decrement n =
 
 
 subscriptions : Model -> Sub Msg
-subscriptions { isRunning } =
-  if isRunning then
+subscriptions { state } =
+  if isRunning state then
     Time.every 1000 Tick
   else
     Sub.none
@@ -142,52 +206,61 @@ subscriptions { isRunning } =
 
 
 view : Model -> Html Msg
-view { break, session, timeLeft, isRunning } =
-  div []
-    [ h1 [] [ text "Pomodoro Clock" ]
-    , div [ class "flex" ]
-        [ viewSetting "Break Length" break Break isRunning
-        , viewSetting "Session Length" session Session isRunning
-        ]
-    , viewTimer timeLeft
-    , viewControls
-    , viewAttribution
-    ]
+view { break, session, timeLeft, state } =
+  let
+    isDisabled =
+      isRunning state
+  in
+    div []
+      [ h1 [] [ text "Pomodoro Clock" ]
+      , div [ class "flex" ]
+          [ viewSetting "Break Length" break isDisabled ClickedDownBreak ClickedUpBreak
+          , viewSetting "Session Length" session isDisabled ClickedDownSession ClickedUpSession
+          ]
+      , viewTimer timeLeft state
+      , viewControls
+      , viewAttribution
+      ]
 
 
-viewSetting : String -> Int -> Setting -> Bool -> Html Msg
-viewSetting title value setting isDisabled =
+viewSetting : String -> Int -> Bool -> msg -> msg -> Html msg
+viewSetting title value isDisabled down up =
   div [ class "setting" ]
     [ h2 [] [ text title ]
     , div []
         [ button
             [ class "button"
             , disabled isDisabled
-            , onClick (ClickedDown setting)
+            , onClick down
             ]
             [ i [ class "fa fa-arrow-down fa-2x" ] [] ]
         , span [] [ text (String.fromInt value) ]
         , button
             [ class "button"
             , disabled isDisabled
-            , onClick (ClickedUp setting)
+            , onClick up
             ]
             [ i [ class "fa fa-arrow-up fa-2x" ] [] ]
         ]
     ]
 
 
-viewTimer : Int -> Html msg
-viewTimer value =
-  div
-    [ class "mt timer"
-    , classList
-        [ ("is-expiring", value < 60)
-        ]
-    ]
-    [ h3 [ class "timer__title" ] [ text "Session" ]
-    , div [ class "timer__value" ] [ text (fromSeconds value) ]
-    ]
+viewTimer : Int -> State -> Html msg
+viewTimer value state =
+  let
+    title =
+      case currentPhase state of
+        Session ->
+          "Session"
+
+        Break ->
+          "Break"
+  in
+    div
+      [ class "mt timer", classList [ ("is-expiring", value < 60) ] ]
+      [ h3 [ class "timer__title" ] [ text title ]
+      , div [ class "timer__value" ] [ text (fromSeconds value) ]
+      ]
 
 
 viewControls : Html Msg
@@ -238,3 +311,23 @@ fromSeconds total =
       , ":"
       , String.padLeft 2 '0' (String.fromInt secs)
       ]
+
+
+isRunning : State -> Bool
+isRunning state =
+  case state of
+    Paused _ ->
+      False
+
+    Running _ ->
+      True
+
+
+currentPhase : State -> Phase
+currentPhase state =
+  case state of
+    Paused phase ->
+      phase
+
+    Running phase ->
+      phase
