@@ -75,4 +75,4 @@ behaviour.
 
 ## That's all folks!
 
-Check out the [demo](https://elm-school.github.io/pomodoro-clock/).
+Check out the [demo](https://dwayne.github.io/elm-pomodoro-clock/).
