@@ -1,6 +1,7 @@
 module Main exposing (main)
 
 
+import Duration exposing (Duration)
 import Html as H
 import Html.Attributes as HA
 
@@ -15,10 +16,16 @@ view =
   H.div []
     [ H.h2 [] [ H.text "Title" ]
     , viewTitle "25 + 5 Clock"
-    , H.h2 [] [ H.text "Setting" ]
+    , H.h2 [] [ H.text "Setting: Break Length" ]
     , viewSetting "Break Length" 5
-    , H.h2 [] [ H.text "Setting" ]
+    , H.h2 [] [ H.text "Setting: Session Length" ]
     , viewSetting "Session Length" 25
+    , H.h2 [] [ H.text "Display: Break" ]
+    , viewDisplay "Break" <| Duration.fromSeconds 300
+    , H.h2 [] [ H.text "Display: Session" ]
+    , viewDisplay "Session" <| Duration.fromSeconds 1500
+    , H.h2 [] [ H.text "Display: Session (Warning)" ]
+    , viewDisplay "Session" <| Duration.fromSeconds 59
     ]
 
 
@@ -66,3 +73,17 @@ viewButton button =
 
       Refresh ->
         [ H.i [ HA.class "fa fa-refresh fa-2x" ] [] ]
+
+
+viewDisplay : String -> Duration -> H.Html msg
+viewDisplay title duration =
+  H.div
+    [ HA.class "display"
+    , HA.classList
+        [ ( "display--warning", Duration.isLessThanOneMinute duration )
+        ]
+    ]
+    [ H.h3 [ HA.class "display__title" ] [ H.text title ]
+    , H.div [ HA.class "display__value" ]
+        [ H.text <| Duration.toString duration ]
+    ]
