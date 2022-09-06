@@ -1,24 +1,31 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <title>Pomodoro Clock</title>
+    <title>25 + 5 Clock</title>
 
-    <link rel="stylesheet" href="assets/styles.css">
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.2/css/all.min.css" integrity="sha512-1sCRPdkRXhBV2PBLUdRb4tMg1w2YPf37qatUFeS7zlBy7jJI8Lf4VHwWfZZfpXtYSLy85pkm9GaYVYMfw5BC1A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="/elm-pomodoro-clock/index.css">
   </head>
   <body>
     <div id="app"></div>
+    <audio id="beep" src="/elm-pomodoro-clock/audio/beep.wav"></audio>
     <script src="app.js"></script>
     <script>
       const app = Elm.Main.init({
         node: document.getElementById("app")
       });
 
-      app.ports.play.subscribe(function (id) {
-        document.getElementById(id).play();
+      const beep = document.getElementById('beep');
+
+      app.ports.play.subscribe(() => {
+        setTimeout(() => {
+          beep.volume = 1;
+          beep.currentTime = 0;
+          beep.play();
+        }, 0);
       });
     </script>
   </body>
