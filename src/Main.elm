@@ -4,6 +4,7 @@ module Main exposing (main)
 import Duration exposing (Duration)
 import Html as H
 import Html.Attributes as HA
+import Minutes exposing (Minutes)
 
 
 main : H.Html msg
@@ -17,9 +18,9 @@ view =
     [ H.h2 [] [ H.text "Title" ]
     , viewTitle "25 + 5 Clock"
     , H.h2 [] [ H.text "Setting: Break Length" ]
-    , viewSetting "Break Length" 5
+    , viewSetting "Break Length" <| Minutes.fromInt 5
     , H.h2 [] [ H.text "Setting: Session Length" ]
-    , viewSetting "Session Length" 25
+    , viewSetting "Session Length" <| Minutes.fromInt 25
     , H.h2 [] [ H.text "Display: Break" ]
     , viewDisplay "Break" <| Duration.fromSeconds 300
     , H.h2 [] [ H.text "Display: Session" ]
@@ -34,7 +35,7 @@ viewTitle title =
   H.h1 [] [ H.text title ]
 
 
-viewSetting : String -> Int -> H.Html msg
+viewSetting : String -> Minutes -> H.Html msg
 viewSetting title minutes =
   H.div [ HA.class "setting" ]
     [ H.h2 [ HA.class "setting__title" ] [ H.text title ]
@@ -42,7 +43,7 @@ viewSetting title minutes =
         [ H.div [ HA.class "setting__button" ]
             [ viewButton ArrowDown ]
         , H.span [ HA.class "setting__value" ]
-            [ H.text <| String.fromInt minutes ]
+            [ H.text <| Minutes.toString minutes ]
         , H.div [ HA.class "setting__button" ]
             [ viewButton ArrowUp ]
         ]
