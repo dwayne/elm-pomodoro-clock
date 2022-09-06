@@ -14,19 +14,73 @@ main =
 
 view : H.Html msg
 view =
-  H.div []
-    [ H.h2 [] [ H.text "Title" ]
-    , viewTitle "25 + 5 Clock"
-    , H.h2 [] [ H.text "Setting: Break Length" ]
-    , viewSetting "Break Length" <| Minutes.fromInt 5
-    , H.h2 [] [ H.text "Setting: Session Length" ]
-    , viewSetting "Session Length" <| Minutes.fromInt 25
-    , H.h2 [] [ H.text "Display: Break" ]
-    , viewDisplay "Break" <| Duration.fromSeconds 300
-    , H.h2 [] [ H.text "Display: Session" ]
-    , viewDisplay "Session" <| Duration.fromSeconds 1500
-    , H.h2 [] [ H.text "Display: Session (Warning)" ]
-    , viewDisplay "Session" <| Duration.fromSeconds 59
+  viewLayout <|
+    viewMain
+      { clock =
+          { title = "25 + 5 Clock"
+          , break =
+              { title = "Break Length"
+              , minutes = Minutes.fromInt 5
+              }
+          , session =
+              { title = "Session Length"
+              , minutes = Minutes.fromInt 25
+              }
+          , display =
+              { title = "Session"
+              , duration = Duration.fromSeconds 1500
+              }
+          }
+      , attribution =
+          { name = "Dwayne Crooks"
+          , url = "https://github.com/dwayne"
+          }
+      }
+
+
+viewLayout : H.Html msg -> H.Html msg
+viewLayout content =
+  H.div [ HA.class "layout" ]
+    [ H.div [ HA.class "layout__wrapper" ]
+        [ H.div [ HA.class "layout__main" ] [ content ] ]
+    ]
+
+
+viewMain :
+  { clock : Clock
+  , attribution : Attribution
+  }
+  -> H.Html msg
+viewMain { clock, attribution } =
+  H.main_ [ HA.class "main" ]
+    [ H.div [ HA.class "main__clock" ] [ viewClock clock ]
+    , H.footer [ HA.class "main__attribution" ] [ viewAttribution attribution ]
+    ]
+
+
+type alias Clock =
+  { title : String
+  , break : Setting
+  , session : Setting
+  , display : Display
+  }
+
+
+viewClock : Clock -> H.Html msg
+viewClock { title, break, session, display } =
+  H.div [ HA.class "clock" ]
+    [ H.div [ HA.class "clock__title" ] [ viewTitle title ]
+    , H.div [ HA.class "clock__settings" ]
+        [ H.div [ HA.class "clock__break-setting" ] [ viewSetting break ]
+        , H.div [ HA.class "clock__session-setting" ] [ viewSetting session ]
+        ]
+    , H.div [ HA.class "clock__display" ] [ viewDisplay display ]
+    , H.div [ HA.class "clock__controls" ]
+        [ H.div [ HA.class "clock__play-pause-button" ]
+            [ viewButton PlayPause ]
+        , H.div [ HA.class "clock__refresh-button" ]
+            [ viewButton Refresh ]
+        ]
     ]
 
 
@@ -35,8 +89,14 @@ viewTitle title =
   H.h1 [] [ H.text title ]
 
 
-viewSetting : String -> Minutes -> H.Html msg
-viewSetting title minutes =
+type alias Setting =
+  { title : String
+  , minutes : Minutes
+  }
+
+
+viewSetting : Setting -> H.Html msg
+viewSetting { title, minutes } =
   H.div [ HA.class "setting" ]
     [ H.h2 [ HA.class "setting__title" ] [ H.text title ]
     , H.div [ HA.class "setting__controls" ]
@@ -76,8 +136,14 @@ viewButton button =
         [ H.i [ HA.class "fa fa-refresh fa-2x" ] [] ]
 
 
-viewDisplay : String -> Duration -> H.Html msg
-viewDisplay title duration =
+type alias Display =
+  { title : String
+  , duration : Duration
+  }
+
+
+viewDisplay : Display -> H.Html msg
+viewDisplay { title, duration } =
   H.div
     [ HA.class "display"
     , HA.classList
@@ -87,4 +153,23 @@ viewDisplay title duration =
     [ H.h3 [ HA.class "display__title" ] [ H.text title ]
     , H.div [ HA.class "display__value" ]
         [ H.text <| Duration.toString duration ]
+    ]
+
+
+type alias Attribution =
+  { name : String
+  , url : String
+  }
+
+
+viewAttribution : Attribution -> H.Html msg
+viewAttribution { name, url } =
+  H.p [ HA.class "attribution" ]
+    [ H.text "Developed by "
+    , H.a
+        [ HA.href url
+        , HA.target "_blank"
+        , HA.class "attribution__link"
+        ]
+        [ H.text name ]
     ]
