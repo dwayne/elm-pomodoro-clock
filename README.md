@@ -1,6 +1,6 @@
 # Pomodoro Clock
 
-![A screenshot of the Pomodoro Clock](pomodoro-clock.png)
+![A screenshot of the Pomodoro Clock](screenshot.png)
 
 Use a timer to help you break down your work into intervals.
 
