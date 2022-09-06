@@ -8,6 +8,7 @@ import Html.Attributes as HA
 import Html.Events as HE
 import Minutes exposing (Minutes)
 import PhaseDuration exposing (PhaseDuration)
+import Time
 
 
 main : Program () Model Msg
@@ -16,7 +17,7 @@ main =
     { init = init
     , view = view
     , update = update
-    , subscriptions = always Sub.none
+    , subscriptions = subscriptions
     }
 
 
@@ -54,7 +55,9 @@ type Msg
   | IncrementedBreakLength
   | DecrementedSessionLength
   | IncrementedSessionLength
+  | ClickedPlayPause
   | ClickedRefresh
+  | Tick
 
 
 update : Msg -> Model -> (Model, Cmd msg)
@@ -69,59 +72,137 @@ updatePaused : Msg -> Model -> (Model, Cmd msg)
 updatePaused msg model =
   case msg of
     DecrementedBreakLength ->
-      ( { model | breakLength = Minutes.decrement model.breakLength }
-          |> updatePhaseDuration
+      ( updateBreakLength (Minutes.decrement model.breakLength) model
       , Cmd.none
       )
 
     IncrementedBreakLength ->
-      ( { model | breakLength = Minutes.increment model.breakLength }
-          |> updatePhaseDuration
+      ( updateBreakLength (Minutes.increment model.breakLength) model
       , Cmd.none
       )
 
     DecrementedSessionLength ->
-      ( { model | sessionLength = Minutes.decrement model.sessionLength }
-          |> updatePhaseDuration
+      ( updateSessionLength (Minutes.decrement model.sessionLength) model
       , Cmd.none
       )
 
     IncrementedSessionLength ->
-      ( { model | sessionLength = Minutes.increment model.sessionLength }
-          |> updatePhaseDuration
+      ( updateSessionLength (Minutes.increment model.sessionLength) model
       , Cmd.none
       )
+
+    ClickedPlayPause ->
+      togglePlayPause model
 
     ClickedRefresh ->
       refresh
 
+    Tick ->
+      noop model
+
 
 updatePlaying : Msg -> Model -> (Model, Cmd msg)
-updatePlaying _ model =
-  ( model
-  , Cmd.none
-  )
+updatePlaying msg model =
+  case msg of
+    DecrementedBreakLength ->
+      noop model
+
+    IncrementedBreakLength ->
+      noop model
+
+    DecrementedSessionLength ->
+      noop model
+
+    IncrementedSessionLength ->
+      noop model
+
+    ClickedPlayPause ->
+      togglePlayPause model
+
+    ClickedRefresh ->
+      refresh
+
+    Tick ->
+      if PhaseDuration.isZero model.phaseDuration then
+        ( updateAndSwitchPhaseDuration model
+        , Cmd.none
+        )
+      else
+        ( { model | phaseDuration = PhaseDuration.decrement model.phaseDuration }
+        , Cmd.none
+        )
 
 
-updatePhaseDuration : Model -> Model
-updatePhaseDuration model =
+updateBreakLength : Minutes -> Model -> Model
+updateBreakLength breakLength model =
+  case model.phaseDuration of
+    PhaseDuration.Break _ ->
+      { model
+      | breakLength = breakLength
+      , phaseDuration = PhaseDuration.Break <| Minutes.toDuration breakLength
+      }
+
+    PhaseDuration.Session _ ->
+      { model | breakLength = breakLength }
+
+
+updateSessionLength : Minutes -> Model -> Model
+updateSessionLength sessionLength model =
   case model.phaseDuration of
     PhaseDuration.Session _ ->
       { model
-      | phaseDuration =
-          PhaseDuration.Session <| Minutes.toDuration model.sessionLength
+      | sessionLength = sessionLength
+      , phaseDuration = PhaseDuration.Session <| Minutes.toDuration sessionLength
       }
 
     PhaseDuration.Break _ ->
+      { model | sessionLength = sessionLength }
+
+
+updateAndSwitchPhaseDuration : Model -> Model
+updateAndSwitchPhaseDuration model =
+  case model.phaseDuration of
+    PhaseDuration.Session _ ->
       { model
       | phaseDuration =
           PhaseDuration.Break <| Minutes.toDuration model.breakLength
       }
 
+    PhaseDuration.Break _ ->
+      { model
+      | phaseDuration =
+          PhaseDuration.Session <| Minutes.toDuration model.sessionLength
+      }
+
+
+togglePlayPause : Model -> (Model, Cmd msg)
+togglePlayPause model =
+  ( { model | isPlaying = not model.isPlaying }
+  , Cmd.none
+  )
+
 
 refresh : (Model, Cmd msg)
 refresh =
   init ()
+
+
+noop : Model -> (Model, Cmd msg)
+noop model =
+  ( model
+  , Cmd.none
+  )
+
+
+-- SUBSCRIPTIONS
+
+
+subscriptions : Model -> Sub Msg
+subscriptions model =
+  if model.isPlaying then
+    Time.every 1000 <| always Tick
+  else
+    Sub.none
 
 
 -- VIEW
@@ -156,6 +237,7 @@ view { breakLength, sessionLength, phaseDuration } =
                   { title = "Break"
                   , duration = duration
                   }
+          , onPlayPause = ClickedPlayPause
           , onRefresh = ClickedRefresh
           }
       , attribution =
@@ -190,12 +272,13 @@ type alias Clock msg =
   , break : Setting msg
   , session : Setting msg
   , display : Display
+  , onPlayPause : msg
   , onRefresh : msg
   }
 
 
 viewClock : Clock msg -> H.Html msg
-viewClock { title, break, session, display, onRefresh } =
+viewClock { title, break, session, display, onPlayPause, onRefresh } =
   H.div [ HA.class "clock" ]
     [ H.div [ HA.class "clock__title" ] [ viewTitle title ]
     , H.div [ HA.class "clock__settings" ]
@@ -205,7 +288,7 @@ viewClock { title, break, session, display, onRefresh } =
     , H.div [ HA.class "clock__display" ] [ viewDisplay display ]
     , H.div [ HA.class "clock__controls" ]
         [ H.div [ HA.class "clock__play-pause-button" ]
-            [ viewButton PlayPause ]
+            [ viewButton <| PlayPause onPlayPause ]
         , H.div [ HA.class "clock__refresh-button" ]
             [ viewButton <| Refresh onRefresh ]
         ]
@@ -243,7 +326,7 @@ viewSetting { title, minutes, onDecrement, onIncrement } =
 type Button msg
   = ArrowDown msg
   | ArrowUp msg
-  | PlayPause
+  | PlayPause msg
   | Refresh msg
 
 
@@ -264,8 +347,11 @@ viewButton button =
         ]
         [ H.i [ HA.class "fa fa-arrow-up fa-2x" ] [] ]
 
-    PlayPause ->
-      H.button [ HA.class "button" ]
+    PlayPause onPlayPause ->
+      H.button
+        [ HA.class "button"
+        , HE.onClick onPlayPause
+        ]
         [ H.i [ HA.class "fa fa-play fa-2x" ] []
         , H.i [ HA.class "fa fa-pause fa-2x" ] []
         ]

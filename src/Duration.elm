@@ -1,7 +1,9 @@
 module Duration exposing
   ( Duration
   , fromSeconds
+  , isZero
   , isLessThanOneMinute
+  , decrement
   , toString
   )
 
@@ -17,9 +19,19 @@ fromSeconds =
   Duration << clamp 0 3600
 
 
+isZero : Duration -> Bool
+isZero (Duration seconds) =
+  seconds == 0
+
+
 isLessThanOneMinute : Duration -> Bool
 isLessThanOneMinute (Duration seconds) =
   seconds < 60
+
+
+decrement : Duration -> Duration
+decrement (Duration seconds) =
+  Duration <| seconds - 1
 
 
 toString : Duration -> String
