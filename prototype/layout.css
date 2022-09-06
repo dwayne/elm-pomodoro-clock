@@ -1,0 +1,34 @@
+body {
+  margin: 0;
+  height: 100vh;
+}
+
+
+.layout {
+  height: 100%;
+}
+
+
+.layout__main {
+  display: inline-flex;
+  flex-direction: column;
+
+  min-width: 410px;
+  padding: 20px;
+}
+
+
+@media screen and (min-width: 410px) {
+  .layout {
+    display: flex;
+    justify-content: center;
+  }
+}
+
+
+@media screen and (min-height: 525px) {
+  .layout {
+    display: flex;
+    align-items: center;
+  }
+}

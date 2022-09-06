@@ -1,0 +1,10 @@
+.main {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+
+.main__clock {
+  margin-bottom: 32px;
+}

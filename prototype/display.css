@@ -1,0 +1,29 @@
+:root {
+  --red: #a50d0d;
+}
+
+
+.display {
+  display: inline-block;
+  padding: 20px 60px;
+  border: 7px solid #13353a;
+  border-radius: 50px;
+  text-align: center;
+}
+
+
+.display__title {
+  margin-top: 0;
+  line-height: 1;
+}
+
+
+.display__value {
+  font-family: Digital;
+  font-size: 50px;
+}
+
+
+.display--warning {
+  color: var(--red);
+}

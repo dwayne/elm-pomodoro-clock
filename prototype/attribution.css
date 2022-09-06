@@ -1,0 +1,19 @@
+:root {
+  --red: #a50d0d;
+}
+
+
+.attribution {
+  margin: 0;
+
+  font-family: 'Share Tech Mono', sans;
+  text-align: center;
+  color: var(--red);
+}
+
+
+.attribution__link {
+  display: block;
+  text-decoration: none;
+  color: #00264d;
+}

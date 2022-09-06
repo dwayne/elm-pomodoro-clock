@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>Main</title>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.2/css/all.min.css" integrity="sha512-1sCRPdkRXhBV2PBLUdRb4tMg1w2YPf37qatUFeS7zlBy7jJI8Lf4VHwWfZZfpXtYSLy85pkm9GaYVYMfw5BC1A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="/global.css">
+    <link rel="stylesheet" href="/button.css">
+    <link rel="stylesheet" href="/setting.css">
+    <link rel="stylesheet" href="/display.css">
+    <link rel="stylesheet" href="/clock.css">
+    <link rel="stylesheet" href="/attribution.css">
+    <link rel="stylesheet" href="/main.css">
+  </head>
+  <body>
+    <h1>Main</h1>
+    
+    <main class="main">
+      <div class="main__clock">
+        <div class="clock">
+          <div class="clock__title">
+            <h1>25 + 5 Clock</h1>
+          </div>
+          <div class="clock__settings">
+            <div class="clock__break-setting">
+              <div class="setting">
+                <h2 class="setting__title">Break Length</h2>
+                <div class="setting__controls">
+                  <div class="setting__button">
+                    <button class="button">
+                      <i class="fa fa-arrow-down fa-2x"></i>
+                    </button>
+                  </div>
+                  <span class="setting__value">5</span>
+                  <div class="setting__button">
+                    <button class="button">
+                      <i class="fa fa-arrow-up fa-2x"></i>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="clock__session-setting">
+              <div class="setting">
+                <h2 class="setting__title">Session Length</h2>
+                <div class="setting__controls">
+                  <div class="setting__button">
+                    <button class="button">
+                      <i class="fa fa-arrow-down fa-2x"></i>
+                    </button>
+                  </div>
+                  <span class="setting__value">25</span>
+                  <div class="setting__button">
+                    <button class="button">
+                      <i class="fa fa-arrow-up fa-2x"></i>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="clock__display">
+            <div class="display">
+              <h3 class="display__title">Session</h3>
+              <div class="display__value">25:00</div>
+            </div>
+          </div>
+          <div class="clock__controls">
+            <div class="clock__play-pause-button">
+              <button class="button">
+                <i class="fa fa-play fa-2x"></i>
+                <i class="fa fa-pause fa-2x"></i>
+              </button>
+            </div>
+            <div class="clock__refresh-button">
+              <button class="button">
+                <i class="fa fa-refresh fa-2x"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <footer class="main__attribution">
+        <p class="attribution">
+          Developed by
+          <a href="https://github.com/dwayne/" target="_blank" class="attribution__link">Dwayne Crooks</a>
+        </p>
+      </footer>
+    </main>
+  </body>
+</html>
