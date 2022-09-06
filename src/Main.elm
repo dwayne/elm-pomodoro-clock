@@ -99,7 +99,7 @@ update msg model =
                     { model | timeLeft = model.session * 60, state = Running Session }
             in
               ( newModel
-              , play "beep"
+              , play ()
               )
 
         _ ->
@@ -200,7 +200,7 @@ decrement n =
 -- COMMANDS
 
 
-port play : String -> Cmd msg
+port play : () -> Cmd msg
 
 
 -- SUBSCRIPTIONS
@@ -224,7 +224,7 @@ view { break, session, timeLeft, state } =
       isRunning state
   in
     div []
-      [ h1 [] [ text "Pomodoro Clock" ]
+      [ h1 [] [ text "25 + 5 Clock" ]
       , div [ class "flex" ]
           [ viewSetting "Break Length" break isDisabled ClickedDownBreak ClickedUpBreak
           , viewSetting "Session Length" session isDisabled ClickedDownSession ClickedUpSession
@@ -272,7 +272,6 @@ viewTimer value state =
       [ class "mt timer", classList [ ("is-expiring", value < 60) ] ]
       [ h3 [ class "timer__title" ] [ text title ]
       , div [ class "timer__value" ] [ text (fromSeconds value) ]
-      , audio [ id "beep", src "assets/audio/beep.wav" ] []
       ]
 
 
