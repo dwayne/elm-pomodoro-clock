@@ -24,7 +24,8 @@ main =
 
 
 type alias Model =
-  { breakLength : Minutes
+  { isPlaying : Bool
+  , breakLength : Minutes
   , sessionLength : Minutes
   , phaseDuration : PhaseDuration
   }
@@ -36,7 +37,8 @@ init _ =
     sessionLength =
       Minutes.fromInt 25
   in
-  ( { breakLength = Minutes.fromInt 5
+  ( { isPlaying = False
+    , breakLength = Minutes.fromInt 5
     , sessionLength = sessionLength
     , phaseDuration = PhaseDuration.Session <| Minutes.toDuration sessionLength
     }
@@ -57,6 +59,14 @@ type Msg
 
 update : Msg -> Model -> (Model, Cmd msg)
 update msg model =
+  if model.isPlaying then
+    updatePlaying msg model
+  else
+    updatePaused msg model
+
+
+updatePaused : Msg -> Model -> (Model, Cmd msg)
+updatePaused msg model =
   case msg of
     DecrementedBreakLength ->
       ( { model | breakLength = Minutes.decrement model.breakLength }
@@ -84,6 +94,13 @@ update msg model =
 
     ClickedRefresh ->
       refresh
+
+
+updatePlaying : Msg -> Model -> (Model, Cmd msg)
+updatePlaying _ model =
+  ( model
+  , Cmd.none
+  )
 
 
 updatePhaseDuration : Model -> Model
