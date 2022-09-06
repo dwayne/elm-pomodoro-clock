@@ -1,6 +1,7 @@
 module Minutes exposing
   ( Minutes
   , fromInt
+  , decrement, increment
   , toString, toDuration
   )
 
@@ -17,6 +18,16 @@ type Minutes =
 fromInt : Int -> Minutes
 fromInt =
   Minutes << clamp 1 60
+
+
+decrement : Minutes -> Minutes
+decrement (Minutes mins) =
+  fromInt <| mins - 1
+
+
+increment : Minutes -> Minutes
+increment (Minutes mins) =
+  fromInt <| mins + 1
 
 
 toString : Minutes -> String
