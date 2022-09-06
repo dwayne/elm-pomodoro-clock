@@ -1,35 +1,89 @@
 module Main exposing (main)
 
 
+import Browser
 import Duration exposing (Duration)
 import Html as H
 import Html.Attributes as HA
 import Minutes exposing (Minutes)
+import PhaseDuration exposing (PhaseDuration)
 
 
-main : H.Html msg
+main : Program () Model Msg
 main =
-  view
+  Browser.element
+    { init = init
+    , view = view
+    , update = update
+    , subscriptions = always Sub.none
+    }
 
 
-view : H.Html msg
-view =
+-- MODEL
+
+
+type alias Model =
+  { breakLength : Minutes
+  , sessionLength : Minutes
+  , phaseDuration : PhaseDuration
+  }
+
+
+init : () -> (Model, Cmd msg)
+init _ =
+  let
+    sessionLength =
+      Minutes.fromInt 25
+  in
+  ( { breakLength = Minutes.fromInt 5
+    , sessionLength = sessionLength
+    , phaseDuration = PhaseDuration.Session <| Minutes.toDuration sessionLength
+    }
+  , Cmd.none
+  )
+
+
+-- UPDATE
+
+
+type alias Msg = {}
+
+
+update : Msg -> Model -> (Model, Cmd msg)
+update _ model =
+  ( model
+  , Cmd.none
+  )
+
+
+-- VIEW
+
+
+view : Model -> H.Html msg
+view { breakLength, sessionLength, phaseDuration } =
   viewLayout <|
     viewMain
       { clock =
           { title = "25 + 5 Clock"
           , break =
               { title = "Break Length"
-              , minutes = Minutes.fromInt 5
+              , minutes = breakLength
               }
           , session =
               { title = "Session Length"
-              , minutes = Minutes.fromInt 25
+              , minutes = sessionLength
               }
           , display =
-              { title = "Session"
-              , duration = Duration.fromSeconds 1500
-              }
+              case phaseDuration of
+                PhaseDuration.Session duration ->
+                  { title = "Session"
+                  , duration = duration
+                  }
+
+                PhaseDuration.Break duration ->
+                  { title = "Break"
+                  , duration = duration
+                  }
           }
       , attribution =
           { name = "Dwayne Crooks"
