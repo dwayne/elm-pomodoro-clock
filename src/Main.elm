@@ -2,6 +2,7 @@ module Main exposing (main)
 
 
 import Html as H
+import Html.Attributes as HA
 
 
 main : H.Html msg
@@ -11,4 +12,57 @@ main =
 
 view : H.Html msg
 view =
-  H.text "Hello, world!"
+  H.div []
+    [ H.h2 [] [ H.text "Title" ]
+    , viewTitle "25 + 5 Clock"
+    , H.h2 [] [ H.text "Setting" ]
+    , viewSetting "Break Length" 5
+    , H.h2 [] [ H.text "Setting" ]
+    , viewSetting "Session Length" 25
+    ]
+
+
+viewTitle : String -> H.Html msg
+viewTitle title =
+  H.h1 [] [ H.text title ]
+
+
+viewSetting : String -> Int -> H.Html msg
+viewSetting title minutes =
+  H.div [ HA.class "setting" ]
+    [ H.h2 [ HA.class "setting__title" ] [ H.text title ]
+    , H.div [ HA.class "setting__controls" ]
+        [ H.div [ HA.class "setting__button" ]
+            [ viewButton ArrowDown ]
+        , H.span [ HA.class "setting__value" ]
+            [ H.text <| String.fromInt minutes ]
+        , H.div [ HA.class "setting__button" ]
+            [ viewButton ArrowUp ]
+        ]
+    ]
+
+
+type Button
+  = ArrowDown
+  | ArrowUp
+  | PlayPause
+  | Refresh
+
+
+viewButton : Button -> H.Html msg
+viewButton button =
+  H.button [ HA.class "button" ] <|
+    case button of
+      ArrowDown ->
+        [ H.i [ HA.class "fa fa-arrow-down fa-2x" ] [] ]
+
+      ArrowUp ->
+        [ H.i [ HA.class "fa fa-arrow-up fa-2x" ] [] ]
+
+      PlayPause ->
+        [ H.i [ HA.class "fa fa-play fa-2x" ] []
+        , H.i [ HA.class "fa fa-pause fa-2x" ] []
+        ]
+
+      Refresh ->
+        [ H.i [ HA.class "fa fa-refresh fa-2x" ] [] ]
