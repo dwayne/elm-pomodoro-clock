@@ -1,4 +1,4 @@
-module Main exposing (main)
+port module Main exposing (main)
 
 
 import Browser
@@ -125,7 +125,7 @@ updatePlaying msg model =
     Tick ->
       if PhaseDuration.isZero model.phaseDuration then
         ( updateAndSwitchPhaseDuration model
-        , Cmd.none
+        , play ()
         )
       else
         ( { model | phaseDuration = PhaseDuration.decrement model.phaseDuration }
@@ -192,6 +192,12 @@ noop model =
   ( model
   , Cmd.none
   )
+
+
+-- PORTS
+
+
+port play : () -> Cmd msg
 
 
 -- SUBSCRIPTIONS
