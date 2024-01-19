@@ -176,7 +176,7 @@ subscriptions model =
 
 
 view : Model -> H.Html Msg
-view { clock } =
+view { isPlaying, clock } =
     let
         { breakLength, sessionLength, phaseDuration } =
             Clock.toState clock
@@ -190,12 +190,14 @@ view { clock } =
                     , minutes = breakLength
                     , onDecrement = DecrementedBreakLength
                     , onIncrement = IncrementedBreakLength
+                    , isDisabled = isPlaying
                     }
                 , session =
                     { title = "Session Length"
                     , minutes = sessionLength
                     , onDecrement = DecrementedSessionLength
                     , onIncrement = IncrementedSessionLength
+                    , isDisabled = isPlaying
                     }
                 , display =
                     case phaseDuration of
@@ -261,9 +263,19 @@ viewClock { title, break, session, display, onPlayPause, onRefresh } =
         , H.div [ HA.class "clock__display" ] [ viewDisplay display ]
         , H.div [ HA.class "clock__controls" ]
             [ H.div [ HA.class "clock__play-pause-button" ]
-                [ viewButton <| PlayPause onPlayPause ]
+                [ viewButton
+                    { icon = PlayPause
+                    , onClick = onPlayPause
+                    , isDisabled = False
+                    }
+                ]
             , H.div [ HA.class "clock__refresh-button" ]
-                [ viewButton <| Refresh onRefresh ]
+                [ viewButton
+                    { icon = Refresh
+                    , onClick = onRefresh
+                    , isDisabled = False
+                    }
+                ]
             ]
         ]
 
@@ -298,63 +310,89 @@ type alias SettingOptions msg =
     , minutes : Minutes
     , onDecrement : msg
     , onIncrement : msg
+    , isDisabled : Bool
     }
 
 
 viewSetting : SettingOptions msg -> H.Html msg
-viewSetting { title, minutes, onDecrement, onIncrement } =
+viewSetting { title, minutes, onDecrement, onIncrement, isDisabled } =
+    let
+        isDecrementDisabled =
+            Minutes.isMin minutes
+
+        isIncrementDisabled =
+            Minutes.isMax minutes
+    in
     H.div [ HA.class "setting" ]
         [ H.h2 [ HA.class "setting__title" ] [ H.text title ]
         , H.div [ HA.class "setting__controls" ]
             [ H.div [ HA.class "setting__button" ]
-                [ viewButton <| ArrowDown onDecrement ]
+                [ viewButton
+                    { icon = ArrowDown
+                    , onClick = onDecrement
+                    , isDisabled = isDisabled || isDecrementDisabled
+                    }
+                ]
             , H.span [ HA.class "setting__value" ]
                 [ H.text <| Minutes.toString minutes ]
             , H.div [ HA.class "setting__button" ]
-                [ viewButton <| ArrowUp onIncrement ]
+                [ viewButton
+                    { icon = ArrowUp
+                    , onClick = onIncrement
+                    , isDisabled = isDisabled || isIncrementDisabled
+                    }
+                ]
             ]
         ]
 
 
-type Button msg
-    = ArrowDown msg
-    | ArrowUp msg
-    | PlayPause msg
-    | Refresh msg
+type alias ButtonOptions msg =
+    { icon : Icon
+    , onClick : msg
+    , isDisabled : Bool
+    }
 
 
-viewButton : Button msg -> H.Html msg
-viewButton button =
-    case button of
-        ArrowDown onDecrement ->
-            H.button
-                [ HA.class "button"
-                , HE.onClick onDecrement
-                ]
-                [ H.i [ HA.class "fa-solid fa-arrow-down fa-2x" ] [] ]
+type Icon
+    = ArrowDown
+    | ArrowUp
+    | PlayPause
+    | Refresh
 
-        ArrowUp onIncrement ->
-            H.button
-                [ HA.class "button"
-                , HE.onClick onIncrement
-                ]
-                [ H.i [ HA.class "fa-solid fa-arrow-up fa-2x" ] [] ]
 
-        PlayPause onPlayPause ->
-            H.button
-                [ HA.class "button"
-                , HE.onClick onPlayPause
-                ]
-                [ H.i [ HA.class "fa-solid fa-play fa-2x" ] []
-                , H.i [ HA.class "fa-solid fa-pause fa-2x" ] []
-                ]
+viewButton : ButtonOptions msg -> H.Html msg
+viewButton { icon, onClick, isDisabled } =
+    let
+        iconChildren =
+            case icon of
+                ArrowDown ->
+                    [ H.i [ HA.class "fa-solid fa-arrow-down fa-2x" ] [] ]
 
-        Refresh onRefresh ->
-            H.button
-                [ HA.class "button"
-                , HE.onClick onRefresh
-                ]
-                [ H.i [ HA.class "fa-solid fa-arrows-rotate fa-2x" ] [] ]
+                ArrowUp ->
+                    [ H.i [ HA.class "fa-solid fa-arrow-up fa-2x" ] [] ]
+
+                PlayPause ->
+                    [ H.i [ HA.class "fa-solid fa-play fa-2x" ] []
+                    , H.i [ HA.class "fa-solid fa-pause fa-2x" ] []
+                    ]
+
+                Refresh ->
+                    [ H.i [ HA.class "fa-solid fa-arrows-rotate fa-2x" ] [] ]
+
+        baseAttrs =
+            [ HA.class "button" ]
+
+        additionalAttrs =
+            if isDisabled then
+                [ HA.disabled True ]
+
+            else
+                [ HE.onClick onClick ]
+
+        attrs =
+            baseAttrs ++ additionalAttrs
+    in
+    H.button attrs iconChildren
 
 
 type alias AttributionOptions =

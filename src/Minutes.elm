@@ -3,6 +3,8 @@ module Minutes exposing
     , decrement
     , fromInt
     , increment
+    , isMax
+    , isMin
     , toDuration
     , toString
     )
@@ -22,6 +24,16 @@ type
 fromInt : Int -> Minutes
 fromInt =
     Minutes << clamp 1 60
+
+
+isMin : Minutes -> Bool
+isMin (Minutes mins) =
+    mins == 1
+
+
+isMax : Minutes -> Bool
+isMax (Minutes mins) =
+    mins == 60
 
 
 decrement : Minutes -> Minutes

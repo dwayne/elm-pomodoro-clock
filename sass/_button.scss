@@ -3,13 +3,34 @@
 .button {
   border: 0;
   outline: none;
-
+  cursor: pointer;
   background-color: transparent;
+
   color: colors.$zircon;
 
-  cursor: pointer;
+  transition: rotate 0.25s ease-out;
 }
 
-.button:hover {
+.button:enabled:hover {
   color: colors.$jungleMist;
+}
+
+.button:has(.fa-arrow-down):enabled:active {
+  transform: translateY(2px);
+}
+
+.button:has(.fa-arrow-up):enabled:active {
+  transform: translateY(-2px);
+}
+
+.button:has(.fa-play):has(.fa-pause):enabled:active {
+  transform: scale(0.95);
+}
+
+.button:has(.fa-arrows-rotate):enabled:active {
+  rotate: 180deg;
+}
+
+.button:disabled {
+  cursor: default;
 }
