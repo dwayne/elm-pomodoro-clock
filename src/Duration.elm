@@ -8,13 +8,13 @@ module Duration exposing
     )
 
 
-type Duration
+type
+    Duration
+    --
+    -- Minimum: 0 secs
+    -- Maximum: 1 hour = 60 mins = 3600 secs
+    --
     = Duration Int
-
-
-
--- min duration = 0 secs
--- max duration = 1 hour = 60 mins = 3600 secs
 
 
 fromSeconds : Int -> Duration
@@ -29,12 +29,15 @@ isZero (Duration seconds) =
 
 isLessThanOneMinute : Duration -> Bool
 isLessThanOneMinute (Duration seconds) =
+    --
+    -- 1 min = 60 secs
+    --
     seconds < 60
 
 
 decrement : Duration -> Duration
 decrement (Duration seconds) =
-    Duration <| seconds - 1
+    fromSeconds <| seconds - 1
 
 
 toString : Duration -> String
@@ -50,9 +53,13 @@ toString (Duration seconds) =
 
 toDDString : Int -> String
 toDDString =
+    --
+    -- 0  -> "00"
+    -- 1  -> "01"
+    -- ...
+    -- 9  -> "09"
+    -- 10 -> "10"
+    -- ...
+    -- 60 -> "60"
+    --
     String.padLeft 2 '0' << String.fromInt
-
-
-
--- toDDString 0 = "00"
--- toDDString 60 = "60"

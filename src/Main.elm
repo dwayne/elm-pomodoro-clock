@@ -1,12 +1,12 @@
 port module Main exposing (main)
 
 import Browser
+import Clock exposing (Clock)
 import Duration exposing (Duration)
 import Html as H
 import Html.Attributes as HA
 import Html.Events as HE
 import Minutes exposing (Minutes)
-import PhaseDuration exposing (PhaseDuration)
 import Time
 
 
@@ -26,22 +26,18 @@ main =
 
 type alias Model =
     { isPlaying : Bool
-    , breakLength : Minutes
-    , sessionLength : Minutes
-    , phaseDuration : PhaseDuration
+    , clock : Clock
     }
 
 
 init : () -> ( Model, Cmd msg )
 init _ =
-    let
-        sessionLength =
-            Minutes.fromInt 25
-    in
     ( { isPlaying = False
-      , breakLength = Minutes.fromInt 5
-      , sessionLength = sessionLength
-      , phaseDuration = PhaseDuration.Session <| Minutes.toDuration sessionLength
+      , clock =
+            Clock.init
+                { breakLength = Minutes.fromInt 5
+                , sessionLength = Minutes.fromInt 25
+                }
       }
     , Cmd.none
     )
@@ -74,22 +70,22 @@ updatePaused : Msg -> Model -> ( Model, Cmd msg )
 updatePaused msg model =
     case msg of
         DecrementedBreakLength ->
-            ( updateBreakLength (Minutes.decrement model.breakLength) model
+            ( { model | clock = Clock.decrementBreakLength model.clock }
             , Cmd.none
             )
 
         IncrementedBreakLength ->
-            ( updateBreakLength (Minutes.increment model.breakLength) model
+            ( { model | clock = Clock.incrementBreakLength model.clock }
             , Cmd.none
             )
 
         DecrementedSessionLength ->
-            ( updateSessionLength (Minutes.decrement model.sessionLength) model
+            ( { model | clock = Clock.decrementSessionLength model.clock }
             , Cmd.none
             )
 
         IncrementedSessionLength ->
-            ( updateSessionLength (Minutes.increment model.sessionLength) model
+            ( { model | clock = Clock.incrementSessionLength model.clock }
             , Cmd.none
             )
 
@@ -125,57 +121,15 @@ updatePlaying msg model =
             refresh
 
         Tick ->
-            if PhaseDuration.isZero model.phaseDuration then
-                ( updateAndSwitchPhaseDuration model
+            if Clock.isZero model.clock then
+                ( { model | clock = Clock.switchPhase model.clock }
                 , play ()
                 )
 
             else
-                ( { model | phaseDuration = PhaseDuration.decrement model.phaseDuration }
+                ( { model | clock = Clock.decrement model.clock }
                 , Cmd.none
                 )
-
-
-updateBreakLength : Minutes -> Model -> Model
-updateBreakLength breakLength model =
-    case model.phaseDuration of
-        PhaseDuration.Break _ ->
-            { model
-                | breakLength = breakLength
-                , phaseDuration = PhaseDuration.Break <| Minutes.toDuration breakLength
-            }
-
-        PhaseDuration.Session _ ->
-            { model | breakLength = breakLength }
-
-
-updateSessionLength : Minutes -> Model -> Model
-updateSessionLength sessionLength model =
-    case model.phaseDuration of
-        PhaseDuration.Session _ ->
-            { model
-                | sessionLength = sessionLength
-                , phaseDuration = PhaseDuration.Session <| Minutes.toDuration sessionLength
-            }
-
-        PhaseDuration.Break _ ->
-            { model | sessionLength = sessionLength }
-
-
-updateAndSwitchPhaseDuration : Model -> Model
-updateAndSwitchPhaseDuration model =
-    case model.phaseDuration of
-        PhaseDuration.Session _ ->
-            { model
-                | phaseDuration =
-                    PhaseDuration.Break <| Minutes.toDuration model.breakLength
-            }
-
-        PhaseDuration.Break _ ->
-            { model
-                | phaseDuration =
-                    PhaseDuration.Session <| Minutes.toDuration model.sessionLength
-            }
 
 
 togglePlayPause : Model -> ( Model, Cmd msg )
@@ -222,7 +176,11 @@ subscriptions model =
 
 
 view : Model -> H.Html Msg
-view { breakLength, sessionLength, phaseDuration } =
+view { clock } =
+    let
+        { breakLength, sessionLength, phaseDuration } =
+            Clock.toState clock
+    in
     viewLayout <|
         viewMain
             { clock =
@@ -241,12 +199,12 @@ view { breakLength, sessionLength, phaseDuration } =
                     }
                 , display =
                     case phaseDuration of
-                        PhaseDuration.Session duration ->
+                        Clock.Session duration ->
                             { title = "Session"
                             , duration = duration
                             }
 
-                        PhaseDuration.Break duration ->
+                        Clock.Break duration ->
                             { title = "Break"
                             , duration = duration
                             }
@@ -262,15 +220,17 @@ view { breakLength, sessionLength, phaseDuration } =
 
 viewLayout : H.Html msg -> H.Html msg
 viewLayout content =
-    H.div [ HA.class "layout" ]
-        [ H.div [ HA.class "layout__wrapper" ]
-            [ H.div [ HA.class "layout__main" ] [ content ] ]
+    H.div
+        [ HA.class "layout" ]
+        [ H.div
+            [ HA.class "layout__content" ]
+            [ content ]
         ]
 
 
 viewMain :
-    { clock : Clock msg
-    , attribution : Attribution
+    { clock : ClockOptions msg
+    , attribution : AttributionOptions
     }
     -> H.Html msg
 viewMain { clock, attribution } =
@@ -280,17 +240,17 @@ viewMain { clock, attribution } =
         ]
 
 
-type alias Clock msg =
+type alias ClockOptions msg =
     { title : String
-    , break : Setting msg
-    , session : Setting msg
-    , display : Display
+    , break : SettingOptions msg
+    , session : SettingOptions msg
+    , display : DisplayOptions
     , onPlayPause : msg
     , onRefresh : msg
     }
 
 
-viewClock : Clock msg -> H.Html msg
+viewClock : ClockOptions msg -> H.Html msg
 viewClock { title, break, session, display, onPlayPause, onRefresh } =
     H.div [ HA.class "clock" ]
         [ H.div [ HA.class "clock__title" ] [ viewTitle title ]
@@ -313,7 +273,27 @@ viewTitle title =
     H.h1 [] [ H.text title ]
 
 
-type alias Setting msg =
+type alias DisplayOptions =
+    { title : String
+    , duration : Duration
+    }
+
+
+viewDisplay : DisplayOptions -> H.Html msg
+viewDisplay { title, duration } =
+    H.div
+        [ HA.class "display"
+        , HA.classList
+            [ ( "display--warning", Duration.isLessThanOneMinute duration )
+            ]
+        ]
+        [ H.h3 [ HA.class "display__title" ] [ H.text title ]
+        , H.div [ HA.class "display__value" ]
+            [ H.text <| Duration.toString duration ]
+        ]
+
+
+type alias SettingOptions msg =
     { title : String
     , minutes : Minutes
     , onDecrement : msg
@@ -321,7 +301,7 @@ type alias Setting msg =
     }
 
 
-viewSetting : Setting msg -> H.Html msg
+viewSetting : SettingOptions msg -> H.Html msg
 viewSetting { title, minutes, onDecrement, onIncrement } =
     H.div [ HA.class "setting" ]
         [ H.h2 [ HA.class "setting__title" ] [ H.text title ]
@@ -351,22 +331,22 @@ viewButton button =
                 [ HA.class "button"
                 , HE.onClick onDecrement
                 ]
-                [ H.i [ HA.class "fa fa-arrow-down fa-2x" ] [] ]
+                [ H.i [ HA.class "fa-solid fa-arrow-down fa-2x" ] [] ]
 
         ArrowUp onIncrement ->
             H.button
                 [ HA.class "button"
                 , HE.onClick onIncrement
                 ]
-                [ H.i [ HA.class "fa fa-arrow-up fa-2x" ] [] ]
+                [ H.i [ HA.class "fa-solid fa-arrow-up fa-2x" ] [] ]
 
         PlayPause onPlayPause ->
             H.button
                 [ HA.class "button"
                 , HE.onClick onPlayPause
                 ]
-                [ H.i [ HA.class "fa fa-play fa-2x" ] []
-                , H.i [ HA.class "fa fa-pause fa-2x" ] []
+                [ H.i [ HA.class "fa-solid fa-play fa-2x" ] []
+                , H.i [ HA.class "fa-solid fa-pause fa-2x" ] []
                 ]
 
         Refresh onRefresh ->
@@ -374,43 +354,24 @@ viewButton button =
                 [ HA.class "button"
                 , HE.onClick onRefresh
                 ]
-                [ H.i [ HA.class "fa fa-refresh fa-2x" ] [] ]
+                [ H.i [ HA.class "fa-solid fa-arrows-rotate fa-2x" ] [] ]
 
 
-type alias Display =
-    { title : String
-    , duration : Duration
-    }
-
-
-viewDisplay : Display -> H.Html msg
-viewDisplay { title, duration } =
-    H.div
-        [ HA.class "display"
-        , HA.classList
-            [ ( "display--warning", Duration.isLessThanOneMinute duration )
-            ]
-        ]
-        [ H.h3 [ HA.class "display__title" ] [ H.text title ]
-        , H.div [ HA.class "display__value" ]
-            [ H.text <| Duration.toString duration ]
-        ]
-
-
-type alias Attribution =
+type alias AttributionOptions =
     { name : String
     , url : String
     }
 
 
-viewAttribution : Attribution -> H.Html msg
+viewAttribution : AttributionOptions -> H.Html msg
 viewAttribution { name, url } =
     H.p [ HA.class "attribution" ]
         [ H.text "Developed by "
         , H.a
-            [ HA.href url
+            [ HA.class "attribution__link"
+            , HA.href url
             , HA.target "_blank"
-            , HA.class "attribution__link"
+            , HA.title <| "Developed by " ++ name
             ]
             [ H.text name ]
         ]

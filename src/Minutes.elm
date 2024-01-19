@@ -10,13 +10,13 @@ module Minutes exposing
 import Duration exposing (Duration)
 
 
-type Minutes
+type
+    Minutes
+    --
+    -- Minimum: 1 min
+    -- Maximum: 60 mins
+    --
     = Minutes Int
-
-
-
--- min minutes = 1 min
--- max minutes = 60 mins
 
 
 fromInt : Int -> Minutes
