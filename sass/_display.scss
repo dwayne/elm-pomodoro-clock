@@ -1,29 +1,24 @@
-:root {
-  --red: #a50d0d;
-}
-
+@use "colors";
+@use "fonts";
 
 .display {
   display: inline-block;
   padding: 20px 60px;
-  border: 7px solid #13353a;
+  border: 7px solid colors.$nordic;
   border-radius: 50px;
   text-align: center;
 }
-
 
 .display__title {
   margin-top: 0;
   line-height: 1;
 }
 
-
 .display__value {
-  font-family: Digital;
+  font-family: fonts.$digital;
   font-size: 50px;
 }
 
-
 .display--warning {
-  color: var(--red);
+  color: colors.$red;
 }

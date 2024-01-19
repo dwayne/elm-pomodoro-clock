@@ -1,19 +1,16 @@
-:root {
-  --red: #a50d0d;
-}
-
+@use "colors";
+@use "fonts";
 
 .attribution {
   margin: 0;
 
-  font-family: 'Share Tech Mono', sans;
+  font-family: fonts.$shareTechMono;
   text-align: center;
-  color: var(--red);
+  color: colors.$red;
 }
-
 
 .attribution__link {
   display: block;
   text-decoration: none;
-  color: #00264d;
+  color: colors.$prussianBlue;
 }

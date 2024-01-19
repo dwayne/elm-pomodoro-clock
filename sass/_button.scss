@@ -1,9 +1,15 @@
+@use "colors";
+
 .button {
   border: 0;
   outline: none;
 
   background-color: transparent;
-  color: white;
+  color: colors.$zircon;
 
   cursor: pointer;
+}
+
+.button:hover {
+  color: colors.$jungleMist;
 }
