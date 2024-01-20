@@ -25,14 +25,14 @@ main =
 
 
 type alias Model =
-    { isPlaying : Bool
+    { isTicking : Bool
     , clock : Clock
     }
 
 
 init : () -> ( Model, Cmd msg )
 init _ =
-    ( { isPlaying = False
+    ( { isTicking = False
       , clock =
             Clock.init
                 { breakLength = Minutes.fromInt 5
@@ -59,15 +59,15 @@ type Msg
 
 update : Msg -> Model -> ( Model, Cmd msg )
 update msg model =
-    if model.isPlaying then
-        updatePlaying msg model
+    if model.isTicking then
+        updateTicking msg model
 
     else
-        updatePaused msg model
+        updateNotTicking msg model
 
 
-updatePaused : Msg -> Model -> ( Model, Cmd msg )
-updatePaused msg model =
+updateNotTicking : Msg -> Model -> ( Model, Cmd msg )
+updateNotTicking msg model =
     case msg of
         DecrementedBreakLength ->
             ( { model | clock = Clock.decrementBreakLength model.clock }
@@ -90,7 +90,7 @@ updatePaused msg model =
             )
 
         ClickedPlayPause ->
-            togglePlayPause model
+            toggleTicking model
 
         ClickedRefresh ->
             refresh
@@ -99,8 +99,8 @@ updatePaused msg model =
             noop model
 
 
-updatePlaying : Msg -> Model -> ( Model, Cmd msg )
-updatePlaying msg model =
+updateTicking : Msg -> Model -> ( Model, Cmd msg )
+updateTicking msg model =
     case msg of
         DecrementedBreakLength ->
             noop model
@@ -115,7 +115,7 @@ updatePlaying msg model =
             noop model
 
         ClickedPlayPause ->
-            togglePlayPause model
+            toggleTicking model
 
         ClickedRefresh ->
             refresh
@@ -132,9 +132,9 @@ updatePlaying msg model =
                 )
 
 
-togglePlayPause : Model -> ( Model, Cmd msg )
-togglePlayPause model =
-    ( { model | isPlaying = not model.isPlaying }
+toggleTicking : Model -> ( Model, Cmd msg )
+toggleTicking model =
+    ( { model | isTicking = not model.isTicking }
     , Cmd.none
     )
 
@@ -164,7 +164,7 @@ port play : () -> Cmd msg
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    if model.isPlaying then
+    if model.isTicking then
         Time.every 1000 <| always Tick
 
     else
@@ -176,7 +176,7 @@ subscriptions model =
 
 
 view : Model -> H.Html Msg
-view { isPlaying, clock } =
+view { isTicking, clock } =
     let
         { breakLength, sessionLength, phaseDuration } =
             Clock.toState clock
@@ -190,14 +190,14 @@ view { isPlaying, clock } =
                     , minutes = breakLength
                     , onDecrement = DecrementedBreakLength
                     , onIncrement = IncrementedBreakLength
-                    , isDisabled = isPlaying
+                    , isDisabled = isTicking
                     }
                 , session =
                     { title = "Session Length"
                     , minutes = sessionLength
                     , onDecrement = DecrementedSessionLength
                     , onIncrement = IncrementedSessionLength
-                    , isDisabled = isPlaying
+                    , isDisabled = isTicking
                     }
                 , display =
                     case phaseDuration of
