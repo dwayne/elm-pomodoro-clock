@@ -8,9 +8,12 @@ module Clock exposing
     , incrementBreakLength
     , incrementSessionLength
     , init
+    , isTicking
     , isZero
+    , refresh
     , switchPhase
     , toState
+    , toggleTicking
     )
 
 import Duration exposing (Duration)
@@ -22,7 +25,8 @@ type Clock
 
 
 type alias State =
-    { breakLength : Minutes
+    { isTicking : Bool
+    , breakLength : Minutes
     , sessionLength : Minutes
     , phaseDuration : PhaseDuration
     }
@@ -36,10 +40,31 @@ type PhaseDuration
 init : { breakLength : Minutes, sessionLength : Minutes } -> Clock
 init { breakLength, sessionLength } =
     Clock
-        { breakLength = breakLength
+        { isTicking = False
+        , breakLength = breakLength
         , sessionLength = sessionLength
         , phaseDuration = Session <| Minutes.toDuration sessionLength
         }
+
+
+refresh : Clock -> Clock
+refresh (Clock state) =
+    Clock
+        { state
+            | isTicking = False
+            , phaseDuration =
+                case state.phaseDuration of
+                    Session _ ->
+                        Session <| Minutes.toDuration state.sessionLength
+
+                    Break _ ->
+                        Break <| Minutes.toDuration state.breakLength
+        }
+
+
+toggleTicking : Clock -> Clock
+toggleTicking (Clock state) =
+    Clock { state | isTicking = not state.isTicking }
 
 
 decrementBreakLength : Clock -> Clock
@@ -112,6 +137,11 @@ incrementSessionLength (Clock state) =
 
         Break _ ->
             Clock { state | sessionLength = sessionLength }
+
+
+isTicking : Clock -> Bool
+isTicking (Clock state) =
+    state.isTicking
 
 
 isZero : Clock -> Bool

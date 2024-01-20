@@ -25,15 +25,13 @@ main =
 
 
 type alias Model =
-    { isTicking : Bool
-    , clock : Clock
+    { clock : Clock
     }
 
 
 init : () -> ( Model, Cmd msg )
 init _ =
-    ( { isTicking = False
-      , clock =
+    ( { clock =
             Clock.init
                 { breakLength = Minutes.fromInt 5
                 , sessionLength = Minutes.fromInt 25
@@ -59,7 +57,7 @@ type Msg
 
 update : Msg -> Model -> ( Model, Cmd msg )
 update msg model =
-    if model.isTicking then
+    if Clock.isTicking model.clock then
         updateTicking msg model
 
     else
@@ -68,35 +66,33 @@ update msg model =
 
 updateNotTicking : Msg -> Model -> ( Model, Cmd msg )
 updateNotTicking msg model =
-    case msg of
-        DecrementedBreakLength ->
-            ( { model | clock = Clock.decrementBreakLength model.clock }
-            , Cmd.none
-            )
+    let
+        clock =
+            case msg of
+                DecrementedBreakLength ->
+                    Clock.decrementBreakLength model.clock
 
-        IncrementedBreakLength ->
-            ( { model | clock = Clock.incrementBreakLength model.clock }
-            , Cmd.none
-            )
+                IncrementedBreakLength ->
+                    Clock.incrementBreakLength model.clock
 
-        DecrementedSessionLength ->
-            ( { model | clock = Clock.decrementSessionLength model.clock }
-            , Cmd.none
-            )
+                DecrementedSessionLength ->
+                    Clock.decrementSessionLength model.clock
 
-        IncrementedSessionLength ->
-            ( { model | clock = Clock.incrementSessionLength model.clock }
-            , Cmd.none
-            )
+                IncrementedSessionLength ->
+                    Clock.incrementSessionLength model.clock
 
-        ClickedPlayPause ->
-            toggleTicking model
+                ClickedPlayPause ->
+                    Clock.toggleTicking model.clock
 
-        ClickedRefresh ->
-            refresh
+                ClickedRefresh ->
+                    Clock.refresh model.clock
 
-        Tick ->
-            noop model
+                Tick ->
+                    model.clock
+    in
+    ( { model | clock = clock }
+    , Cmd.none
+    )
 
 
 updateTicking : Msg -> Model -> ( Model, Cmd msg )
@@ -115,10 +111,14 @@ updateTicking msg model =
             noop model
 
         ClickedPlayPause ->
-            toggleTicking model
+            ( { model | clock = Clock.toggleTicking model.clock }
+            , Cmd.none
+            )
 
         ClickedRefresh ->
-            refresh
+            ( { model | clock = Clock.refresh model.clock }
+            , Cmd.none
+            )
 
         Tick ->
             if Clock.isZero model.clock then
@@ -130,18 +130,6 @@ updateTicking msg model =
                 ( { model | clock = Clock.decrement model.clock }
                 , Cmd.none
                 )
-
-
-toggleTicking : Model -> ( Model, Cmd msg )
-toggleTicking model =
-    ( { model | isTicking = not model.isTicking }
-    , Cmd.none
-    )
-
-
-refresh : ( Model, Cmd msg )
-refresh =
-    init ()
 
 
 noop : Model -> ( Model, Cmd msg )
@@ -163,8 +151,8 @@ port play : () -> Cmd msg
 
 
 subscriptions : Model -> Sub Msg
-subscriptions model =
-    if model.isTicking then
+subscriptions { clock } =
+    if Clock.isTicking clock then
         Time.every 1000 <| always Tick
 
     else
@@ -176,9 +164,9 @@ subscriptions model =
 
 
 view : Model -> H.Html Msg
-view { isTicking, clock } =
+view { clock } =
     let
-        { breakLength, sessionLength, phaseDuration } =
+        { isTicking, breakLength, sessionLength, phaseDuration } =
             Clock.toState clock
     in
     viewLayout <|
