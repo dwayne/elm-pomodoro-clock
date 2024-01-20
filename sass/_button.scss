@@ -32,5 +32,6 @@
 }
 
 .button:disabled {
-  cursor: default;
+  cursor: not-allowed;
+  color: colors.$regentGrey;
 }
